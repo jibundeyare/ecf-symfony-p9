@@ -17,8 +17,23 @@ class EmprunteurController extends AbstractController
     #[Route('/', name: 'app_emprunteur_index', methods: ['GET'])]
     public function index(EmprunteurRepository $emprunteurRepository): Response
     {
+        // si l'utilisateur n'est ni un admin ni un emprunteur, il ne verra d'une liste vide
+        $emprunteurs = [];
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            // l'utilisateur est un admin
+            // liste qui contient tous les profiles emprunteur
+            $emprunteurs = $emprunteurRepository->findAll();
+        } elseif ($this->isGranted('ROLE_EMPRUNTEUR')) {
+            // l'utilisateur est un emprunteur
+            $user = $this->getUser();
+            $userEmprunteur = $emprunteurRepository->findByUser($user);
+            // liste qui ne contient que le profile emprunteur de l'utilisateur
+            $emprunteurs = [$userEmprunteur];
+        }
+
         return $this->render('emprunteur/index.html.twig', [
-            'emprunteurs' => $emprunteurRepository->findAll(),
+            'emprunteurs' => $emprunteurs,
         ]);
     }
 
@@ -46,15 +61,7 @@ class EmprunteurController extends AbstractController
     #[Route('/{id}', name: 'app_emprunteur_show', methods: ['GET'])]
     public function show(Emprunteur $emprunteur, EmprunteurRepository $emprunteurRepository): Response
     {
-        if ($this->isGranted('ROLE_EMPRUNTEUR')) {
-            // l'utilisateur est un emprunteur
-            $user = $this->getUser();
-            $userEmprunteur = $emprunteurRepository->findByUser($user);
-
-            if ($emprunteur->getId() != $userEmprunteur->getId()) {
-                throw new NotFoundHttpException();
-            }
-        }
+        $this->filterRoleEmprunteur($emprunteur, $emprunteurRepository);
 
         return $this->render('emprunteur/show.html.twig', [
             'emprunteur' => $emprunteur,
@@ -64,6 +71,8 @@ class EmprunteurController extends AbstractController
     #[Route('/{id}/edit', name: 'app_emprunteur_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Emprunteur $emprunteur, EmprunteurRepository $emprunteurRepository): Response
     {
+        $this->filterRoleEmprunteur($emprunteur, $emprunteurRepository);
+
         $form = $this->createForm(EmprunteurType::class, $emprunteur);
         $form->handleRequest($request);
 
@@ -89,5 +98,19 @@ class EmprunteurController extends AbstractController
         }
 
         return $this->redirectToRoute('app_emprunteur_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    private function filterRoleEmprunteur(Emprunteur $emprunteur, EmprunteurRepository $emprunteurRepository): void
+    {
+        if ($this->isGranted('ROLE_EMPRUNTEUR')) {
+            // l'utilisateur est un emprunteur
+            $user = $this->getUser();
+            $userEmprunteur = $emprunteurRepository->findByUser($user);
+
+            if ($emprunteur->getId() != $userEmprunteur->getId()) {
+                // l'utilisateur tente d'accéder au profil d'un emprunteur qui n'est pas le sien
+                throw new NotFoundHttpException();
+            }
+        }
     }
 }
