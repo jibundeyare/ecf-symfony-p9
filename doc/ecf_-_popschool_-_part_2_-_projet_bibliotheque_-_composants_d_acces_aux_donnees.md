@@ -52,11 +52,11 @@ Si vous utilisez Symfony :
 Requêtes de lecture :
 
 - la liste complète de tous les utilisateurs (de la table `user`)
-@todo - la liste complète de tous les utilisateurs (de la table `user`) triée par email en ordre ascendant
+- @todo la liste complète de tous les utilisateurs (de la table `user`) triée par email en ordre ascendant
 - les données de l'utilisateur dont l'id est `1`
 - les données de l'utilisateur dont l'email est `foo.foo@example.com`
 - les données des utilisateurs dont l'attribut `roles` contient le mot clé `ROLE_EMRUNTEUR`
-@todo - les données du profile emprunteur de l'utilisateur dont l'id est `2`
+- @todo les données du profile emprunteur de l'utilisateur dont l'id est `2`
 
 ### Les livres
 
